@@ -332,6 +332,10 @@ def main():
     # 6. 自動では引き当てられなかったぶんの手当て(data/manual.json)。
     #    NDLのレコードを1件ずつ確かめて書き写したもの。最後に上書きする。
     man = {k: v for k, v in load(MANUAL, {}).items() if not k.startswith("_")}
+    titles = {b["raw_title"] for b in books} | {b["title"] for b in books}
+    stray = sorted(k for k in man if k not in titles)
+    if stray:
+        print("!! manual.json のキーがどの記事にも当たっていない:", stray, flush=True)
     for b in books:
         rec = man.get(b["raw_title"]) or man.get(b["title"])
         if rec:

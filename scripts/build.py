@@ -275,7 +275,6 @@ FC2ブログ「読書記録 by どぅ」のアーカイブ。{built} 時点で {
 
     DOCS.mkdir(exist_ok=True)
     (DOCS / "index.html").write_text(html_doc, encoding="utf-8")
-    (DOCS / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     size = (DOCS / "index.html").stat().st_size
     print(f"docs/index.html {size/1024/1024:.2f} MB / {len(books)}件 / 著者あり {withauthor}件")
