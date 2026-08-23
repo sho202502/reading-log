@@ -312,8 +312,8 @@ def main():
         + "".join(rows) + "</tbody>" + foot + "</table></section>")
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
-    nbest = sum(1 for b in books if b["kind"] == "best" or b["id"] in best_ids)
-    buttons = (f'<button data-sel="best" aria-pressed="false">ベスト<span class="n">{nbest}</span></button>'
+    nbest = sum(1 for b in books if b["kind"] == "best")   # 年の数（並ぶのは選ばれた本も含む）
+    buttons = (f'<button data-sel="best" aria-pressed="false">年間ベスト<span class="n">{nbest}</span></button>'
                + "".join(f'<button data-sel="{n}" aria-pressed="false">'
                          f'{stars(n)[:n]}<span class="n">{c[n]}</span></button>'
                          for n in (5, 4, 3, 2)))
