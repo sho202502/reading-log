@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""books.json に著者・出版社・出版年を補完する。
+"""books.json の、著者・出版社・出版年が空いている記事だけを埋める。
 
-順番:
-  1. 短縮URLの展開結果(data/cache/short_urls.json)を取り込んでISBNを確定させる
-  2. ISBNがあるものは openBD で引く
-  3. まだ著者が埋まらないものは 国立国会図書館サーチ をタイトルで引く
+books.json が原本なので、すでに揃っている記事には一切触らない。
+本を1冊足したあとにこれを走らせると、その1冊ぶんだけ引きに行く。
 
-外部から取ったものは data/cache/ に全部貯める。二度目からは通信しない。
-Amazonは短縮URLの展開にしか使わず、書誌そのものは openBD と NDL からしか取らない。
+  1. ISBNがあれば openBD
+  2. openBDに無ければ 国立国会図書館サーチ にISBNで
+  3. ISBNが無ければ 国立国会図書館サーチ に書名で
+  4. 同じ本を二度読んでいる記事があれば、そちらから引き継ぐ
+
+取ってきたものは data/cache/ に貯める。二度目からは通信しない。
 """
 import json, re, sys, time, subprocess, unicodedata, pathlib, urllib.request, urllib.parse, collections
 from concurrent.futures import ThreadPoolExecutor
@@ -18,7 +20,6 @@ CACHE = ROOT / "data" / "cache"
 CACHE.mkdir(parents=True, exist_ok=True)
 OPENBD, NDL, SHORT = CACHE / "openbd.json", CACHE / "ndl.json", CACHE / "short_urls.json"
 NDL_ISBN = CACHE / "ndl_isbn.json"
-MANUAL = ROOT / "data" / "manual.json"
 
 UA = {"User-Agent": "reading-log/1.0 (personal archive script)"}
 
@@ -82,7 +83,8 @@ def isbn13_to_10(i):
 
 
 def step_openbd(books, cache):
-    want = sorted({b["isbn"] for b in books if b["isbn"] and b["isbn"] not in cache})
+    want = sorted({b["isbn"] for b in books
+                   if b["isbn"] and b["isbn"] not in cache and not done(b)})
     print(f"openBD: {len(want)}件を照会 (キャッシュ {len(cache)})", flush=True)
     for i in range(0, len(want), 80):
         batch = want[i:i + 80]
@@ -232,6 +234,7 @@ def step_ndl_isbn(books, cache):
     ob = load(OPENBD, {})
     # openBDが著者・出版社・出版年のどれかを持っていないISBNはNDLにも聞く
     want = sorted({b["isbn"] for b in books if b["isbn"] and b["isbn"] not in cache
+                   and not done(b)
                    and not all((ob.get(b["isbn"]) or {}).get(k) for k in ("author", "publisher", "pubdate"))})
     return run_pool(want, lambda i: ndl_query({"isbn": i}), cache, NDL_ISBN, "NDL(ISBN)")
 
@@ -239,8 +242,7 @@ def step_ndl_isbn(books, cache):
 def step_ndl(books, cache, retry=False):
     # retry=True のときは、前回空振りした分(タイムアウト含む)をもう一度だけ引き直す
     want = sorted({b["title"] for b in books
-                   if b["kind"] == "book"
-                   and not (b["author"] and b["publisher"] and b["pubdate"])
+                   if b["kind"] == "book" and not done(b)
                    and (b["title"] not in cache or (retry and cache[b["title"]] is None))})
     return run_pool(want, ndl_search, cache, NDL, "NDL(タイトル)")
 
@@ -252,9 +254,13 @@ def main():
     books = load(BOOKS, [])
     short = load(SHORT, {})
 
+    def done(b):
+        """著者・出版社・出版年が揃っている記事は、もう触らない。"""
+        return bool(b["author"] and b["publisher"] and b["pubdate"])
+
     # 1. 短縮URLからISBN/ASINを確定
     for b in books:
-        if b["isbn"]:
+        if b["isbn"] or done(b):
             continue
         for u in b["short_urls"]:
             v = short.get(u)
@@ -271,6 +277,8 @@ def main():
     if not offline:
         ob = step_openbd(books, ob)
     for b in books:
+        if done(b):
+            continue
         rec = ob.get(b["isbn"]) if b["isbn"] else None
         if rec and rec.get("author"):
             b["author"], b["publisher"], b["pubdate"], b["source"] = \
@@ -281,7 +289,7 @@ def main():
     if not offline:
         ni = step_ndl_isbn(books, ni)
     for b in books:
-        if b["author"]:
+        if b["author"] or done(b):
             continue
         rec = pick(ni.get(b["isbn"]) or []) if b["isbn"] else None
         if rec and rec.get("author"):
@@ -293,7 +301,7 @@ def main():
     if not offline:
         nd = step_ndl(books, nd, retry="--retry" in sys.argv)
     for b in books:
-        if b["author"]:
+        if b["author"] or done(b):
             continue
         rec = pick(nd.get(b["title"]) or [], want_title=b["title"])
         if rec and rec.get("author"):
@@ -328,24 +336,6 @@ def main():
             b["author"], b["publisher"], b["pubdate"] = src["author"], src["publisher"], src["pubdate"]
             b["isbn"] = b["isbn"] or src["isbn"]
             b["source"] = "同じ本の別記事"
-
-    # 6. 自動では引き当てられなかったぶんの手当て(data/manual.json)。
-    #    NDLのレコードを1件ずつ確かめて書き写したもの。最後に上書きする。
-    man = {k: v for k, v in load(MANUAL, {}).items() if not k.startswith("_")}
-    titles = {b["raw_title"] for b in books} | {b["title"] for b in books}
-    stray = sorted(k for k in man if k not in titles)
-    if stray:
-        print("!! manual.json のキーがどの記事にも当たっていない:", stray, flush=True)
-    for b in books:
-        rec = man.get(b["raw_title"]) or man.get(b["title"])
-        if rec:
-            # 著者が本に記載されていない本（編集部編の「大全」など）もあるので、
-            # 著者が無くても出版社と出版年だけは入れる。
-            if rec.get("author"):
-                b["author"] = rec["author"]
-                b["source"] = "手当て"
-            b["publisher"] = rec.get("publisher") or b["publisher"]
-            b["pubdate"] = rec.get("pubdate") or b["pubdate"]
 
     BOOKS.write_text(json.dumps(books, ensure_ascii=False, indent=1), encoding="utf-8")
     c = collections.Counter(b["source"] or "なし" for b in books)

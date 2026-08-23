@@ -23,13 +23,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      # 書誌データの取得は手元でやってキャッシュをコミットしてあるので、
-      # ここでは外部に問い合わせない(--offline)。
+      # data/books.json が原本。書誌の照会は手元で済ませてあるので、
+      # ここではHTMLを組み立てるだけで、外部には一切問い合わせない。
       - name: ビルド
-        run: |
-          python scripts/parse.py
-          python scripts/enrich.py --offline
-          python scripts/build.py
+        run: python scripts/build.py
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,62 +1,75 @@
 # 読書記録 by どぅ
 
-FC2ブログ「読書記録 by どぅ」（2008–2026 / 1,495件）を、1枚のHTMLとして保管し直したもの。
+2008年から読んだ本の記録（1,482冊）を、1枚のHTMLとして持っておくためのもの。
+元はFC2ブログ「読書記録 by どぅ」で、そちらは畳んだ。
 
-FC2を畳んでも記録が残るようにするのが目的で、人に読ませるためのサイトではない。
-検索エンジンには載せない（`noindex` と `robots.txt`）。
+人に読ませるためのサイトではないので、検索エンジンには載せない（`noindex`）。
 
 ## 中身
 
 ```
-data/dokushop.txt      FC2のMT形式エクスポート（元データ・原本のまま）
-data/books.json        機械可読にしたもの。ここが正
-data/cache/            外部から取ってきた書誌データの控え
-scripts/parse.py       dokushop.txt -> books.json
-scripts/enrich.py      著者・出版社・出版年を補完
-scripts/build.py       books.json -> docs/index.html
-docs/                  公開されるファイル（GitHub Actionsが自動で作る）
+data/books.json     原本。ここが正
+data/cache/         openBD と 国立国会図書館サーチ から取ってきた控え
+scripts/add.py      本を1冊足す
+scripts/enrich.py   著者・出版社・出版年が空いている記事だけ埋める
+scripts/build.py    books.json -> docs/index.html
+docs/index.html     公開されるもの（自動生成）
 ```
 
-## 使い方
+## 本を1冊足す
+
+本文は標準入力から渡す。
 
 ```bash
-python3 scripts/parse.py            # 元データを読み直す
-python3 scripts/enrich.py           # 書誌を補完（外部に問い合わせる）
-python3 scripts/enrich.py --offline # 控えにあるぶんだけ反映（CIはこちら）
-python3 scripts/build.py            # HTMLを書き出す
+python3 scripts/add.py "父の生きる" 5 <<'BODY'
+P121.父の本質は、私を可愛がってくれて、自分よりも大切に思ってくれて、
+私が頼りにもしてきたおとうさんだ。
+BODY
 ```
 
-`main` にpushすると GitHub Actions が `--offline` でビルドして Pages に出す。
-外部への問い合わせは手元で済ませ、結果を `data/cache/` にコミットしてあるので、
-pushのたびに openBD や国立国会図書館サーチを叩くことはない。
+そのあと、著者を引いてHTMLを作り直して、pushする。
+
+```bash
+python3 scripts/enrich.py && python3 scripts/build.py
+```
+
+pushすると GitHub Actions が `docs/` を GitHub Pages に出す。
+Actionsは `build.py` を走らせるだけで、外部には問い合わせない。
+
+日付を変えたいときは `--date 2026-08-20`、ISBNが分かっていれば `--isbn` を付ける。
+
+## 書誌の出どころ
+
+1,482冊すべてに著者・出版社・出版年が入っている。
+
+- [openBD](https://openbd.jp/) … ISBNで引く
+- [国立国会図書館サーチ](https://ndlsearch.ndl.go.jp/) … ISBNまたは書名で引く（OpenSearch と SRU）
+- 元記事の本文・タイトルの表記
+- 版元・書店の書誌（自動で当たらなかった46件を1件ずつ確かめた）
+
+NDLのタイトル検索は、その本を論じた雑誌記事や書評まで返してくる。
+図書のレコードに限ったうえで、書名が実際に噛み合うものだけを採っている
+（`scripts/enrich.py` の `title_ok`）。副題の有無は吸収し、短い書名がたまたま
+長い書名に含まれているだけの一致（「シフト」と「…にシフト」）は落とす。
+
+`enrich.py` は3つとも埋まっている記事には触らない。足した1冊だけを引きに行く。
 
 ## 元データについて
 
-- 記事の区切りは `--------`、フィールドの区切りは `-----`（Movable Type形式）
-- 星評価は `PRIMARY CATEGORY` に入っている（★5=614 / ★4=708 / ★3=119 / ★2=6 / 未分類=34）
+FC2からのMT形式の書き出し `data/dokushop.txt` と、それを変換する `parse.py`、
+自動で引けなかったぶんの書誌 `manual.json` は、役目を終えたので消した。
+必要になったらgitの履歴から戻せる。
+
+```bash
+git show 11ea7cf:data/dokushop.txt > dokushop.txt
+```
+
+変換のときに分かったことを残しておく。
+
+- 星評価はMT形式の `PRIMARY CATEGORY` に入っていた（★5=615 / ★4=708 / ★3=119 / ★2=6）
 - `ベスト` の14件は本の記事ではなく年間まとめ。本文中の書名は該当記事へのリンクに張り替えてある
 - 2009年の記事は元データに1件もない
 - 1件だけ日付が `12/14/1901` になっていたので、前後の記事から `2022-12-31` に直した
 - 画像は全部落とした（参照先がFC2上にあり、読書記録以外をやっていた頃の名残のため）
 - 44件は元から本文が空（Amazonリンク1行だけの記事）
-
-## 著者・出版社の出どころ
-
-本の記事 1481件のうち、著者 1476件 / 出版社 1475件 / 出版年 1474件。
-
-- [openBD](https://openbd.jp/)
-- [国立国会図書館サーチ](https://ndlsearch.ndl.go.jp/)（OpenSearch と、厳密に引きたいときは SRU）
-- 元記事の本文・タイトル（`著者：`、`〜(著)`、`書名（著者）出版社` の表記）
-- `data/manual.json` … 自動では当たらなかったぶんを、NDLのレコードを1件ずつ確かめて書き写したもの
-
-NDLのタイトル検索はその本を論じた雑誌記事や書評まで返してくるので、
-図書のレコードに限ったうえで、書名が実際に噛み合うものだけを採っている
-（`scripts/enrich.py` の `title_ok`）。副題の有無は吸収し、
-短い書名がたまたま長い書名に含まれているだけの一致は落とす。
-
-### それでも埋まらなかった9件
-
-- Kindle限定でNDLに所蔵がない … `シフト` `人工知能、ロボット、人の心。` `本気で中国を狙うなら親日の台湾に行け！` `「Chikirinの日記」の育て方`
-- 本に著者の記載自体がない（編集部編の「大全」） … `腸すごい!` `頻尿　尿もれ`
-- NDL未収蔵で出版年まではたどれない … `その数字が戦略を決める` `古事記 増補新版`
-- 記事がKindle版で、どの訳・版か特定できない … `読書について`
+- Amazonのアフィリエイトリンクは全部捨てたが、URLの中のISBNだけは回収した
