@@ -100,6 +100,13 @@ def title_hints(title):
     name, author, publisher = m.group(1).strip(), m.group(2).strip(), m.group(3).strip()
     if not name or re.search(r"[0-9]{4}年", author):
         return title, None, None
+    # 「書名（著者）出版社」は出版社が短い一語で終わる形。
+    # 空白が入るもの、長いもの、閉じ括弧で続くものは、書名の一部でしかない。
+    #   例: 科学的根拠（エビデンス）で子育て 教育経済学の最前線 / 男の「外見(ヴィジュアル)」コーチング
+    if not publisher or " " in publisher or "　" in publisher or len(publisher) > 12:
+        return title, None, None
+    if publisher[0] in "」』】\"'":
+        return title, None, None
     return name, author, publisher or None
 
 
