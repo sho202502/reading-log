@@ -221,7 +221,7 @@ def main():
         elif b["body"]:
             body_html = html.escape(b["body"])
         else:
-            body_html = '<span class="empty">（本文が残っていない）</span>'
+            body_html = '<span class="empty">記録なし</span>'
 
         parts.append(
             f'<article id="{b["id"]}" class="{b["kind"]}" data-rating="{b["rating"] or 0}"'
