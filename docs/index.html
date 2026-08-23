@@ -73,15 +73,15 @@ main{padding:2.6rem 0 7rem}
 
 /* 年は大きく細く、月は柱のように小さく */
 .year{font-size:3.6rem;letter-spacing:-.01em;color:var(--fg);margin:5rem 0 0;
- font-weight:200;line-height:1;scroll-margin-top:7rem;
+ font-weight:200;line-height:1;scroll-margin-top:8.5rem;
  padding-bottom:.7rem;border-bottom:1px solid var(--fg)}
-.month{margin:2.8rem 0 1.2rem;scroll-margin-top:7rem;line-height:1;
+.month{margin:2.8rem 0 1.2rem;scroll-margin-top:8.5rem;line-height:1;
  display:flex;align-items:center;gap:1rem}
 .month span{font-size:.63rem;letter-spacing:.34em;color:var(--sub);white-space:nowrap}
 .month::after{content:"";flex:1;height:1px;background:var(--hair)}
 .year+.month{margin-top:1.6rem}
 
-article{padding:1.9rem 0;border-bottom:1px solid var(--hair);scroll-margin-top:6.5rem}
+article{padding:1.9rem 0;border-bottom:1px solid var(--hair);scroll-margin-top:8rem}
 .meta{font-size:.66rem;color:var(--sub);display:flex;gap:1rem;flex-wrap:wrap;
  align-items:baseline;font-variant-numeric:tabular-nums;letter-spacing:.16em}
 .stars{color:var(--fg);letter-spacing:.22em;font-family:inherit;font-size:.82rem}
@@ -9685,6 +9685,8 @@ function jumpTo(id){
   return true;
 }
 document.addEventListener('click',e=>{
+  // 別タブで開く操作(command/ctrl+クリックなど)は、そのままブラウザに任せる
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
   const a=e.target.closest('a[href^="#"]');
   if(!a || a.id==='home') return;
   if(jumpTo(decodeURIComponent(a.getAttribute('href').slice(1)))) e.preventDefault();
@@ -9695,6 +9697,7 @@ if(location.hash) jumpTo(decodeURIComponent(location.hash.slice(1)));
 // 読み込み直すとまたそこへ飛んでしまうので、# を外した行き先を自分で指定する。
 // （href="./" のままだと、手元でファイルとして開いたときにフォルダ一覧になってしまう）
 document.getElementById('home').onclick=e=>{
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;   // 別タブで開くときは邪魔しない
   e.preventDefault();
   location.replace(location.pathname + location.search);
 };
