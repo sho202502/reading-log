@@ -11,17 +11,18 @@ BOOKS = ROOT / "data" / "books.json"
 DOCS = ROOT / "docs"
 
 CSS = """
-:root{--bg:#fbfaf8;--fg:#1d1c1a;--sub:#6d6a64;--line:#e2ded7;--accent:#8a6d3b;--card:#fff}
-@media (prefers-color-scheme:dark){
- :root{--bg:#161513;--fg:#e6e3dd;--sub:#97928a;--line:#302e2a;--accent:#d4b483;--card:#1d1c1a}}
+/* 読むための画面なので配色は明るい方に固定する（端末の暗い設定に引きずられない） */
+:root{color-scheme:light;
+ --bg:#fdfcfa;--fg:#1c1b19;--sub:#6b6862;--line:#e6e2db;--accent:#8a6d3b;--card:#fff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);
  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
  line-height:1.9;font-size:16px;-webkit-text-size-adjust:100%}
 header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
- padding:.7rem 1rem;backdrop-filter:blur(6px)}
+ padding:.7rem 1rem}
 .wrap{max-width:44rem;margin:0 auto;padding:0 1rem}
 h1{font-size:1.05rem;margin:0 0 .5rem;font-weight:600;letter-spacing:.04em}
+h1 a{color:inherit;text-decoration:none}
 h1 small{font-weight:400;color:var(--sub);font-size:.8rem;margin-left:.6rem;letter-spacing:0}
 .controls{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
 button{font:inherit;font-size:.82rem;padding:.22rem .7rem;border:1px solid var(--line);
@@ -31,16 +32,32 @@ input[type=search]{font:inherit;font-size:.85rem;padding:.25rem .7rem;border:1px
  border-radius:999px;background:var(--card);color:var(--fg);min-width:11rem;flex:1}
 #count{font-size:.78rem;color:var(--sub);margin-left:auto;white-space:nowrap}
 main{padding:1.5rem 0 6rem}
-.year{font-size:.78rem;letter-spacing:.28em;color:var(--sub);margin:2.6rem 0 .8rem;
- border-bottom:1px solid var(--line);padding-bottom:.3rem}
-.year:first-child{margin-top:0}
+
+/* 年月ごとの冊数 */
+#archive{border:1px solid var(--line);border-radius:.4rem;background:var(--card);
+ padding:.8rem .9rem;margin-bottom:2.5rem;overflow-x:auto}
+#archive h2{font-size:.78rem;letter-spacing:.22em;color:var(--sub);margin:0 0 .6rem;font-weight:400}
+#archive table{border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+ font-size:.76rem;white-space:nowrap;min-width:100%}
+#archive th,#archive td{padding:.15rem .35rem;text-align:right;font-weight:400}
+#archive thead th{color:var(--sub);border-bottom:1px solid var(--line)}
+#archive tbody th{text-align:left;color:var(--fg);padding-right:.7rem}
+#archive a{color:var(--fg);text-decoration:none;display:block;padding:.05rem .15rem;border-radius:.2rem}
+#archive a:hover{background:var(--line)}
+#archive .zero{color:var(--line)}
+#archive .sum{color:var(--accent);border-left:1px solid var(--line);padding-left:.6rem}
+
+.year{font-size:.95rem;letter-spacing:.2em;color:var(--fg);margin:3rem 0 .2rem;font-weight:600}
+.month{font-size:.75rem;letter-spacing:.2em;color:var(--sub);margin:1.6rem 0 .6rem;
+ border-bottom:1px solid var(--line);padding-bottom:.3rem;scroll-margin-top:6.5rem}
+.year+.month{margin-top:.6rem}
 article{padding:1.3rem 0;border-bottom:1px solid var(--line)}
 .meta{font-size:.75rem;color:var(--sub);display:flex;gap:.7rem;flex-wrap:wrap;
  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}
 .stars{color:var(--accent);letter-spacing:.1em;font-family:inherit}
 h2{font-size:1.06rem;margin:.3rem 0 .15rem;font-weight:600;line-height:1.6}
-.byline{font-size:.8rem;color:var(--sub);margin-bottom:.6rem}
 .note{font-size:.88rem;color:var(--accent);margin:.1rem 0 .35rem}
+.byline{font-size:.8rem;color:var(--sub);margin-bottom:.6rem}
 .body{white-space:pre-wrap;overflow-wrap:anywhere}
 .body a{color:var(--accent)}
 .empty{color:var(--sub);font-size:.85rem;font-style:italic}
@@ -55,7 +72,7 @@ JS = """
 const arts=[...document.querySelectorAll('article')];
 // 絞り込み用のテキストは、HTMLを二重に持たないよう読み込み時に組み立てる
 for(const a of arts) a._find = a.textContent.toLowerCase();
-const years=[...document.querySelectorAll('.year')];
+const heads=[...document.querySelectorAll('.year,.month')];
 const q=document.getElementById('q'), cnt=document.getElementById('count');
 const nores=document.getElementById('nores');
 let star=0;
@@ -69,12 +86,18 @@ function apply(){
     a.classList.toggle('hide', !ok);
     if(ok) n++;
   }
-  for(const y of years){
-    let has=false;
-    for(let e=y.nextElementSibling; e && e.tagName==='ARTICLE'; e=e.nextElementSibling)
-      if(!e.classList.contains('hide')){has=true;break;}
-    y.classList.toggle('hide', !has);
+  // 見出しは、その下に残っている記事が1件も無ければ隠す
+  for(let i=heads.length-1; i>=0; i--){
+    const h=heads[i]; let has=false;
+    for(let e=h.nextElementSibling; e; e=e.nextElementSibling){
+      if(e.classList.contains('year')) break;
+      if(e.classList.contains('month')){ if(h.classList.contains('month')) break; 
+        if(!e.classList.contains('hide')){has=true;break;} continue; }
+      if(e.tagName==='ARTICLE' && !e.classList.contains('hide')){has=true;break;}
+    }
+    h.classList.toggle('hide', !has);
   }
+  document.getElementById('archive').classList.toggle('hide', !!t || star!==0);
   cnt.textContent = n + '件';
   nores.style.display = n ? 'none' : 'block';
 }
@@ -135,12 +158,15 @@ def main():
             by_title[b["title"]] = b["id"]
             by_norm[norm(b["title"])] = b["id"]
 
-    parts, cur_year = [], None
+    parts, cur_year, cur_month = [], None, None
     for b in books:
-        y = b["date"][:4]
+        y, m = b["date"][:4], b["date"][5:7]
         if y != cur_year:
             cur_year = y
-            parts.append(f'<div class="year">{y}</div>')
+            parts.append(f'<div class="year" id="y{y}">{y}</div>')
+        if (y, m) != cur_month:
+            cur_month = (y, m)
+            parts.append(f'<div class="month" id="m{y}-{m}">{y}年{int(m)}月</div>')
 
         meta = [b["date"]]
         if b["rating"]:
@@ -167,6 +193,27 @@ def main():
             + f'<div class="body">{body_html}</div></article>'
         )
 
+    # 年ごと・月ごとの冊数（FC2のときの月別アーカイブにあたるもの）
+    per = collections.Counter((b["date"][:4], b["date"][5:7]) for b in books)
+    years = sorted({y for y, _ in per}, reverse=True)
+    rows = []
+    for y in years:
+        cells = []
+        for m in range(1, 13):
+            mm = f"{m:02d}"
+            n = per.get((y, mm), 0)
+            cells.append(f'<td><a href="#m{y}-{mm}">{n}</a></td>' if n
+                         else '<td class="zero">·</td>')
+        total = sum(n for (yy, _), n in per.items() if yy == y)
+        rows.append(f'<tr><th><a href="#y{y}">{y}</a></th>{"".join(cells)}'
+                    f'<td class="sum">{total}</td></tr>')
+    archive = (
+        '<section id="archive"><h2>年月ごとの冊数</h2><table>'
+        '<thead><tr><th></th>'
+        + "".join(f"<th>{m}</th>" for m in range(1, 13))
+        + '<th class="sum">計</th></tr></thead><tbody>'
+        + "".join(rows) + "</tbody></table></section>")
+
     c = collections.Counter(b["rating"] for b in books if b["rating"])
     buttons = "".join(
         f'<button data-star="{n}" aria-pressed="false">{stars(n)[:n]} {c[n]}</button>'
@@ -187,7 +234,7 @@ def main():
 </head>
 <body>
 <header><div class="wrap">
-<h1>読書記録 by どぅ<small>{len(books)}件 ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
+<h1><a href="./">読書記録 by どぅ</a><small>{len(books)}件 ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
 <div class="controls">
 {buttons}
 <input type="search" id="q" placeholder="書名・著者・本文で絞り込む" autocomplete="off">
@@ -195,6 +242,7 @@ def main():
 </div>
 </div></header>
 <main class="wrap">
+{archive}
 {"".join(parts)}
 <div id="nores">見つかりませんでした</div>
 <footer>
