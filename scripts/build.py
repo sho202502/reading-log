@@ -117,7 +117,7 @@ function apply(){
   const t=q.value.trim().toLowerCase();
   let n=0;
   for(const a of arts){
-    const okSel = !sel || (sel==='best' ? a.classList.contains('best')
+    const okSel = !sel || (sel==='best' ? (a.classList.contains('best') || a.dataset.best)
                                         : a.dataset.rating===sel);
     const okText = !t || a._find.includes(t);
     const ok = okSel && okText;
@@ -227,6 +227,13 @@ def main():
             by_title[b["title"]] = b["id"]
             by_norm[norm(b["title"])] = b["id"]
 
+    # 年間ベストに選ばれた本。「ベスト」で絞り込んだとき、一覧と一緒にこの本の記事も出す
+    best_ids = set()
+    for b in books:
+        if b["kind"] == "best":
+            linked = linkify_best(b["body"], by_title, by_norm)
+            best_ids |= set(re.findall(r'href="#([^"]+)"', linked))
+
     parts, cur_year, cur_month = [], None, None
     for b in books:
         y, m = b["date"][:4], b["date"][5:7]
@@ -254,7 +261,8 @@ def main():
 
         parts.append(
             f'<article id="{b["id"]}" class="{b["kind"]}" data-rating="{b["rating"] or 0}"'
-            f'>'
+            + (' data-best="1"' if b["id"] in best_ids else "")
+            + f'>'
             f'<div class="meta">{" ".join(meta)}</div>'
             f'<h2>{html.escape(b["title"])}</h2>'
             + (f'<div class="note">{html.escape(b["note"])}</div>' if b.get("note") else "")
@@ -304,7 +312,7 @@ def main():
         + "".join(rows) + "</tbody>" + foot + "</table></section>")
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
-    nbest = sum(1 for b in books if b["kind"] == "best")
+    nbest = sum(1 for b in books if b["kind"] == "best" or b["id"] in best_ids)
     buttons = (f'<button data-sel="best" aria-pressed="false">ベスト<span class="n">{nbest}</span></button>'
                + "".join(f'<button data-sel="{n}" aria-pressed="false">'
                          f'{stars(n)[:n]}<span class="n">{c[n]}</span></button>'
@@ -355,10 +363,10 @@ def main():
     # ファビコン: 「本」を丸で囲んだもの
     (DOCS / "favicon.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-        '<circle cx="32" cy="32" r="30" fill="#f5f4f1" stroke="#111110" stroke-width="2.5"/>'
+        '<circle cx="32" cy="32" r="32" fill="#111110"/>'
         '<text x="32" y="32" text-anchor="middle" dominant-baseline="central"'
         ' font-family="Hiragino Sans,Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif"'
-        ' font-weight="400" font-size="30" fill="#111110">本</text></svg>\n', encoding="utf-8")
+        ' font-weight="400" font-size="34" fill="#f5f4f1">本</text></svg>\n', encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     size = (DOCS / "index.html").stat().st_size
     print(f"docs/index.html {size/1024/1024:.2f} MB / {len(books)}件 / 著者あり {withauthor}件")
