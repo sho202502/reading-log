@@ -352,10 +352,11 @@ def main():
     # ファビコン: 「本」を丸で囲んだもの
     (DOCS / "favicon.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-        '<rect width="64" height="64" fill="#111110"/>'
+        '<rect width="64" height="64" fill="#f5f4f1"/>'
+        '<rect x="1" y="1" width="62" height="62" fill="none" stroke="#111110" stroke-width="2"/>'
         '<text x="32" y="32" text-anchor="middle" dominant-baseline="central"'
         ' font-family="Hiragino Sans,Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif"'
-        ' font-weight="400" font-size="40" fill="#f5f4f1">本</text></svg>\n', encoding="utf-8")
+        ' font-weight="300" font-size="34" fill="#111110">本</text></svg>\n', encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     size = (DOCS / "index.html").stat().st_size
     print(f"docs/index.html {size/1024/1024:.2f} MB / {len(books)}件 / 著者あり {withauthor}件")
