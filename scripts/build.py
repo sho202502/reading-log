@@ -13,89 +13,95 @@ DOCS = ROOT / "docs"
 CSS = """
 /* 読むための画面なので配色は明るい方に固定する（端末の暗い設定に引きずられない） */
 :root{color-scheme:light;
- --bg:#fbfaf7;--fg:#1a1917;--body:#2b2926;--sub:#79756d;--line:#e8e4dc;
- --hair:#f0ece4;--accent:#8a6d3b;--card:#fff}
+ --bg:#f5f4f1;--fg:#111110;--body:#38352f;--sub:#96918a;--line:#ddd9d1;
+ --hair:#e9e5dd;--accent:#111110;--card:#fbfaf8}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);
- font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
- line-height:1.9;font-size:16px;-webkit-text-size-adjust:100%;
+ font-family:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans",
+ "Hiragino Kaku Gothic ProN","Yu Gothic Medium","Noto Sans JP",sans-serif;
+ line-height:1.95;font-size:16px;-webkit-text-size-adjust:100%;
  font-feature-settings:"palt"}
-.wrap{max-width:54rem;margin:0 auto;padding:0 1.4rem}
+.wrap{max-width:58rem;margin:0 auto;padding:0 1.6rem}
+/* 小さいラベルは字間を広く取る（雑誌の柱のような見え方にする） */
+.label{font-size:.63rem;letter-spacing:.34em;color:var(--sub);font-weight:400}
 
-header{position:sticky;top:0;z-index:10;background:rgba(251,250,247,.94);
- backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line);
- padding:.85rem 0 .8rem}
-h1{font-size:1.52rem;margin:0 0 .7rem;font-weight:500;letter-spacing:.18em;line-height:1.4}
+header{position:sticky;top:0;z-index:10;background:rgba(245,244,241,.9);
+ backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);
+ padding:1rem 0 .9rem}
+h1{font-size:1.72rem;margin:0 0 .9rem;font-weight:300;letter-spacing:.14em;line-height:1.3}
 h1 a{color:inherit;text-decoration:none}
 /* 件数は、絞り込んでいるときだけ出す（全部出しているときは下の表の合計が同じ数） */
-#count{font-size:.76rem;color:var(--sub);margin-left:auto;white-space:nowrap;
- font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+#count{font-size:.68rem;color:var(--sub);margin-left:auto;white-space:nowrap;
+ font-variant-numeric:tabular-nums;letter-spacing:.16em}
 #count:empty{display:none}
 
-.controls{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
-button{font:inherit;font-size:.8rem;line-height:1.6;padding:.2rem .8rem;
- border:1px solid var(--line);border-radius:999px;background:var(--card);
+.controls{display:flex;flex-wrap:wrap;gap:.36rem;align-items:center}
+button{font:inherit;font-size:.72rem;line-height:1.7;padding:.22rem .85rem;
+ border:1px solid var(--line);border-radius:0;background:transparent;
  color:var(--sub);cursor:pointer;display:inline-flex;align-items:baseline;
- justify-content:space-between;gap:.5rem;min-width:7.6rem;
- transition:background .12s,border-color .12s,color .12s}
-button:hover{border-color:#d6d0c4}
-button .n{font-size:.72rem;opacity:.7;font-variant-numeric:tabular-nums}
+ justify-content:space-between;gap:.6rem;min-width:7.6rem;letter-spacing:.1em;
+ transition:background .15s,border-color .15s,color .15s}
+button:hover{border-color:var(--fg);color:var(--fg)}
+button .n{font-size:.66rem;opacity:.65;font-variant-numeric:tabular-nums;letter-spacing:.06em}
 button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-button[aria-pressed=true] .n{opacity:.65}
-input[type=search]{font:inherit;font-size:.84rem;padding:.24rem .9rem;
- border:1px solid var(--line);border-radius:999px;background:var(--card);
- color:var(--fg);flex:1;min-width:8rem}
-input[type=search]:focus{outline:none;border-color:var(--accent)}
+button[aria-pressed=true] .n{opacity:.6}
+input[type=search]{font:inherit;font-size:.76rem;padding:.26rem .85rem;
+ border:1px solid var(--line);border-radius:0;background:transparent;
+ color:var(--fg);flex:1;min-width:8rem;letter-spacing:.1em}
+input[type=search]:focus{outline:none;border-color:var(--fg)}
 
-main{padding:2.2rem 0 7rem}
+main{padding:2.6rem 0 7rem}
 
 /* 年月ごとの冊数 */
-#archive{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
- padding:1rem .1rem 1.1rem;margin-bottom:3.4rem;overflow-x:auto}
-#archive h2{font-size:.7rem;letter-spacing:.3em;color:var(--sub);margin:0 0 .8rem;
+#archive{border-top:1px solid var(--fg);border-bottom:1px solid var(--line);
+ padding:1.1rem .1rem 1.2rem;margin-bottom:4rem;overflow-x:auto}
+#archive h2{font-size:.63rem;letter-spacing:.34em;color:var(--sub);margin:0 0 1rem;
  font-weight:400}
-#archive table{border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
- font-size:.74rem;white-space:nowrap;min-width:100%;font-variant-numeric:tabular-nums}
-#archive th,#archive td{padding:.16rem .34rem;text-align:right;font-weight:400}
-#archive thead th{color:#a8a29a;border-bottom:1px solid var(--hair);font-size:.68rem}
-#archive tbody th,#archive tfoot th{text-align:left;color:var(--fg);padding-right:.8rem;
- letter-spacing:.04em}
-#archive tbody tr:hover td{background:#f6f3ec}
+#archive table{border-collapse:collapse;font-size:.73rem;white-space:nowrap;
+ min-width:100%;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+#archive th,#archive td{padding:.17rem .34rem;text-align:right;font-weight:400}
+#archive thead th{color:#b6b0a7;border-bottom:1px solid var(--hair);font-size:.63rem;
+ letter-spacing:.1em}
+#archive tbody th,#archive tfoot th{text-align:left;color:var(--fg);padding-right:.9rem;
+ letter-spacing:.1em}
+#archive tbody tr:hover td{background:#eeebe4}
 #archive a,#archive .cell{color:var(--fg);text-decoration:none;display:block;
- padding:.06rem .2rem;border-radius:.2rem}
-#archive a:hover{background:var(--accent);color:#fff}
-#archive .zero .cell{color:#d8d2c6}
-#archive .sum{color:var(--accent);border-left:1px solid var(--hair);padding-left:.7rem}
-#archive tfoot th,#archive tfoot td{border-top:1px solid var(--line);padding-top:.4rem;
- color:var(--accent)}
+ padding:.06rem .2rem;border-radius:0}
+#archive a:hover{background:var(--fg);color:var(--bg)}
+#archive .zero .cell{color:#cfc9bf}
+#archive .sum{border-left:1px solid var(--hair);padding-left:.8rem}
+#archive tfoot th,#archive tfoot td{border-top:1px solid var(--line);padding-top:.45rem}
 #archive tfoot .all{font-weight:600}
 
-.year{font-size:1.85rem;letter-spacing:.14em;color:var(--fg);margin:4.2rem 0 0;
- font-weight:400;line-height:1;scroll-margin-top:7rem}
-.month{font-size:.98rem;letter-spacing:.14em;color:var(--fg);font-weight:500;
- margin:2.4rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--hair);
- scroll-margin-top:7rem}
-.year+.month{margin-top:1.1rem}
+/* 年は大きく細く、月は柱のように小さく */
+.year{font-size:3.6rem;letter-spacing:-.01em;color:var(--fg);margin:5rem 0 0;
+ font-weight:200;line-height:1;scroll-margin-top:7rem;
+ padding-bottom:.7rem;border-bottom:1px solid var(--fg)}
+.month{margin:2.8rem 0 1.2rem;scroll-margin-top:7rem;line-height:1;
+ display:flex;align-items:center;gap:1rem}
+.month span{font-size:.63rem;letter-spacing:.34em;color:var(--sub);white-space:nowrap}
+.month::after{content:"";flex:1;height:1px;background:var(--hair)}
+.year+.month{margin-top:1.6rem}
 
-article{padding:1.7rem 0;border-bottom:1px solid var(--hair)}
-.meta{font-size:.72rem;color:var(--sub);display:flex;gap:.85rem;flex-wrap:wrap;
- align-items:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+article{padding:1.9rem 0;border-bottom:1px solid var(--hair)}
+.meta{font-size:.66rem;color:var(--sub);display:flex;gap:1rem;flex-wrap:wrap;
+ align-items:baseline;font-variant-numeric:tabular-nums;letter-spacing:.16em}
+.stars{color:var(--fg);letter-spacing:.22em;font-family:inherit;font-size:.82rem}
+h2{font-size:1.18rem;margin:.42rem 0 .2rem;font-weight:500;line-height:1.6;
  letter-spacing:.04em}
-.stars{color:var(--accent);letter-spacing:.14em;font-family:inherit;font-size:1rem}
-h2{font-size:1.14rem;margin:.34rem 0 .18rem;font-weight:600;line-height:1.65;
- letter-spacing:.01em}
-.note{font-size:.86rem;color:var(--accent);margin:.15rem 0 .4rem;letter-spacing:.02em}
-.byline{font-size:.78rem;color:var(--sub);margin-bottom:.8rem;letter-spacing:.03em}
-.body{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--body);line-height:2.02}
-.body a{color:var(--accent);text-underline-offset:.2em}
-.empty{color:#a8a29a;font-size:.84rem;font-style:italic}
-article.best{background:var(--card);border:1px solid var(--line);border-radius:.5rem;
- padding:1.6rem 1.5rem;margin:1.6rem 0}
+.note{font-size:.8rem;color:var(--sub);margin:.15rem 0 .4rem;letter-spacing:.08em}
+.byline{font-size:.72rem;color:var(--sub);margin-bottom:.9rem;letter-spacing:.12em}
+.body{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--body);line-height:2.05}
+.body a{color:var(--fg);text-underline-offset:.2em}
+.empty{color:#b6b0a7;font-size:.78rem;letter-spacing:.16em}
+article.best{background:var(--card);border:none;border-left:2px solid var(--fg);
+ border-radius:0;padding:1.6rem;margin:1.8rem 0}
 article.best h2{letter-spacing:.1em}
 .hide{display:none}
-#nores{display:none;color:var(--sub);padding:4rem 0;text-align:center;letter-spacing:.1em}
-footer{color:#a8a29a;font-size:.72rem;padding:2.6rem 0 5rem;margin-top:3rem;
- border-top:1px solid var(--line);line-height:2}
+#nores{display:none;color:var(--sub);padding:4rem 0;text-align:center;letter-spacing:.3em;
+ font-size:.7rem}
+footer{color:#b6b0a7;font-size:.66rem;padding:2.8rem 0 5rem;margin-top:3.4rem;
+ border-top:1px solid var(--line);line-height:2.2;letter-spacing:.1em}
 footer a{color:var(--sub)}
 """
 
@@ -206,7 +212,7 @@ def main():
             parts.append(f'<div class="year" id="y{y}">{y}</div>')
         if (y, m) != cur_month:
             cur_month = (y, m)
-            parts.append(f'<div class="month" id="m{y}-{m}">{y}年{int(m)}月</div>')
+            parts.append(f'<div class="month" id="m{y}-{m}"><span>{y}年{int(m)}月</span></div>')
 
         meta = [b["date"]]
         if b["rating"]:
@@ -293,6 +299,7 @@ def main():
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
 <meta name="googlebot" content="noindex,nofollow">
 <title>遠藤翔の読書記録</title>
+<meta name="theme-color" content="#f5f4f1">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>{CSS}</style>
 </head>
@@ -325,10 +332,10 @@ def main():
     # ファビコン: 「本」を丸で囲んだもの
     (DOCS / "favicon.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-        '<circle cx="32" cy="32" r="30" fill="#8a6d3b"/>'
+        '<rect width="64" height="64" fill="#111110"/>'
         '<text x="32" y="32" text-anchor="middle" dominant-baseline="central"'
         ' font-family="Hiragino Sans,Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif"'
-        ' font-weight="700" font-size="38" fill="#fbfaf7">本</text></svg>\n', encoding="utf-8")
+        ' font-weight="400" font-size="40" fill="#f5f4f1">本</text></svg>\n', encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     size = (DOCS / "index.html").stat().st_size
     print(f"docs/index.html {size/1024/1024:.2f} MB / {len(books)}件 / 著者あり {withauthor}件")
