@@ -25,12 +25,12 @@ body{margin:0;background:var(--bg);color:var(--fg);
 header{position:sticky;top:0;z-index:10;background:rgba(251,250,247,.94);
  backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line);
  padding:.85rem 0 .8rem}
-h1{font-size:1.22rem;margin:0 0 .62rem;font-weight:500;letter-spacing:.16em;
- line-height:1.4;display:flex;align-items:baseline;gap:.9rem;flex-wrap:wrap}
+h1{font-size:1.52rem;margin:0 0 .7rem;font-weight:500;letter-spacing:.18em;line-height:1.4}
 h1 a{color:inherit;text-decoration:none}
-h1 small{font-weight:400;color:var(--sub);font-size:.74rem;letter-spacing:.06em;
- font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-#count{font-variant-numeric:tabular-nums}
+/* 件数は、絞り込んでいるときだけ出す（全部出しているときは下の表の合計が同じ数） */
+#count{font-size:.76rem;color:var(--sub);margin-left:auto;white-space:nowrap;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+#count:empty{display:none}
 
 .controls{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
 button{font:inherit;font-size:.8rem;line-height:1.6;padding:.2rem .8rem;
@@ -60,11 +60,14 @@ main{padding:2.2rem 0 7rem}
 #archive thead th{color:#a8a29a;border-bottom:1px solid var(--hair);font-size:.68rem}
 #archive tbody th{text-align:left;color:var(--fg);padding-right:.8rem;letter-spacing:.04em}
 #archive tbody tr:hover td{background:#f6f3ec}
-#archive a{color:var(--fg);text-decoration:none;display:block;padding:.06rem .2rem;
- border-radius:.2rem}
+#archive a,#archive .cell{color:var(--fg);text-decoration:none;display:block;
+ padding:.06rem .2rem;border-radius:.2rem}
 #archive a:hover{background:var(--accent);color:#fff}
-#archive .zero{color:#d8d2c6}
+#archive .zero .cell{color:#d8d2c6}
 #archive .sum{color:var(--accent);border-left:1px solid var(--hair);padding-left:.7rem}
+#archive tfoot th,#archive tfoot td{border-top:1px solid var(--line);padding-top:.4rem;
+ color:var(--accent)}
+#archive tfoot .all{font-weight:600}
 
 .year{font-size:1.85rem;letter-spacing:.14em;color:var(--fg);margin:4.2rem 0 0;
  font-weight:400;line-height:1;scroll-margin-top:7rem}
@@ -126,7 +129,7 @@ function apply(){
     h.classList.toggle('hide', !has);
   }
   document.getElementById('archive').classList.toggle('hide', !!t || !!sel);
-  cnt.textContent = n + '件';
+  cnt.textContent = (sel || t) ? n + '件' : '';   // 絞り込み中だけ出す
   nores.style.display = n ? 'none' : 'block';
 }
 document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
@@ -247,19 +250,27 @@ def main():
             if n:
                 cells.append(f'<td><a href="#m{y}-{mm}">{n}</a></td>')
             elif first <= f"{y}-{mm}" <= last:
-                cells.append('<td class="zero">0</td>')
+                cells.append('<td class="zero"><span class="cell">0</span></td>')
             else:
                 cells.append("<td></td>")
-        total = sum(n for (yy, _), n in per.items() if yy == y) or 0
-        anchor = f'<a href="#y{y}">{y}</a>' if total else y
+        total = sum(n for (yy, _), n in per.items() if yy == y)
+        # リンクの有無で字の位置がずれないよう、リンクでない年も同じ入れ物に入れる
+        anchor = f'<a href="#y{y}">{y}</a>' if total else f'<span class="cell">{y}</span>'
         rows.append(f'<tr><th>{anchor}</th>{"".join(cells)}'
-                    f'<td class="sum">{total}</td></tr>')
+                    f'<td class="sum"><span class="cell">{total}</span></td></tr>')
+
+    # 一番下に月ごとの合計、右下が全部の合計
+    month_sum = [sum(n for (_, mm), n in per.items() if mm == f"{m:02d}") for m in range(1, 13)]
+    foot = ('<tfoot><tr><th><span class="cell">計</span></th>'
+            + "".join(f'<td><span class="cell">{n}</span></td>' for n in month_sum)
+            + f'<td class="sum all"><span class="cell">{sum(month_sum)}</span></td></tr></tfoot>')
+
     archive = (
         '<section id="archive"><h2>年月ごとの冊数</h2><table>'
         '<thead><tr><th></th>'
         + "".join(f"<th>{m}</th>" for m in range(1, 13))
         + '<th class="sum">計</th></tr></thead><tbody>'
-        + "".join(rows) + "</tbody></table></section>")
+        + "".join(rows) + "</tbody>" + foot + "</table></section>")
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
     nbest = sum(1 for b in books if b["kind"] == "best")
@@ -279,16 +290,17 @@ def main():
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
 <meta name="googlebot" content="noindex,nofollow">
-<title>読書記録</title>
+<title>遠藤翔の読書記録</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>{CSS}</style>
 </head>
 <body>
 <header><div class="wrap">
-<h1><a href="./" id="home">読書記録</a><small><span id="count">{len(books)}件</span> ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
+<h1><a href="./" id="home">遠藤翔の読書記録</a></h1>
 <div class="controls">
 {buttons}
 <input type="search" id="q" placeholder="検索" autocomplete="off">
+<span id="count"></span>
 </div>
 </div></header>
 <main class="wrap">
