@@ -20,7 +20,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
  line-height:1.9;font-size:16px;-webkit-text-size-adjust:100%}
 header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
  padding:.7rem 1rem}
-.wrap{max-width:44rem;margin:0 auto;padding:0 1rem}
+.wrap{max-width:54rem;margin:0 auto;padding:0 1.2rem}
 h1{font-size:1.05rem;margin:0 0 .5rem;font-weight:600;letter-spacing:.04em}
 h1 a{color:inherit;text-decoration:none}
 h1 small{font-weight:400;color:var(--sub);font-size:.8rem;margin-left:.6rem;letter-spacing:0}
@@ -44,7 +44,7 @@ main{padding:1.5rem 0 6rem}
 #archive tbody th{text-align:left;color:var(--fg);padding-right:.7rem}
 #archive a{color:var(--fg);text-decoration:none;display:block;padding:.05rem .15rem;border-radius:.2rem}
 #archive a:hover{background:var(--line)}
-#archive .zero{color:var(--line)}
+#archive .zero{color:#c9c3b8}
 #archive .sum{color:var(--accent);border-left:1px solid var(--line);padding-left:.6rem}
 
 .year{font-size:.95rem;letter-spacing:.2em;color:var(--fg);margin:3rem 0 .2rem;font-weight:600}
@@ -75,14 +75,15 @@ for(const a of arts) a._find = a.textContent.toLowerCase();
 const heads=[...document.querySelectorAll('.year,.month')];
 const q=document.getElementById('q'), cnt=document.getElementById('count');
 const nores=document.getElementById('nores');
-let star=0;
+let sel='';                       // '' = 全部 / '2'..'5' = 星の数 / 'best' = 年間ベスト
 function apply(){
   const t=q.value.trim().toLowerCase();
   let n=0;
   for(const a of arts){
-    const okStar = star===0 || +a.dataset.rating===star;
+    const okSel = !sel || (sel==='best' ? a.classList.contains('best')
+                                        : a.dataset.rating===sel);
     const okText = !t || a._find.includes(t);
-    const ok = okStar && okText;
+    const ok = okSel && okText;
     a.classList.toggle('hide', !ok);
     if(ok) n++;
   }
@@ -97,14 +98,14 @@ function apply(){
     }
     h.classList.toggle('hide', !has);
   }
-  document.getElementById('archive').classList.toggle('hide', !!t || star!==0);
+  document.getElementById('archive').classList.toggle('hide', !!t || !!sel);
   cnt.textContent = n + '件';
   nores.style.display = n ? 'none' : 'block';
 }
-document.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{
-  star = +b.dataset.star === star ? 0 : +b.dataset.star;
-  document.querySelectorAll('[data-star]').forEach(x=>
-    x.setAttribute('aria-pressed', +x.dataset.star===star));
+document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
+  sel = b.dataset.sel === sel ? '' : b.dataset.sel;   // 同じものをもう一度押すと解除
+  document.querySelectorAll('[data-sel]').forEach(x=>
+    x.setAttribute('aria-pressed', x.dataset.sel===sel));
   apply();
 });
 q.oninput=apply;
@@ -194,18 +195,29 @@ def main():
         )
 
     # 年ごと・月ごとの冊数（FC2のときの月別アーカイブにあたるもの）
-    per = collections.Counter((b["date"][:4], b["date"][5:7]) for b in books)
-    years = sorted({y for y, _ in per}, reverse=True)
+    # 数えるのは本の記事だけ（年間ベストは12/31付なので混ぜると先の月まで埋まってしまう）
+    read = [b for b in books if b["kind"] == "book"]
+    per = collections.Counter((b["date"][:4], b["date"][5:7]) for b in read)
+    # 記録が始まる前と、最後の記録より先は空欄にする。あいだの0冊の月は0と出す。
+    first = min(b["date"][:7] for b in read)
+    last = max(b["date"][:7] for b in read)
+    # 1冊も読んでいない年(2009年)も行として出したいので、年は範囲から作る
+    years = [str(y) for y in range(int(last[:4]), int(first[:4]) - 1, -1)]
     rows = []
     for y in years:
         cells = []
         for m in range(1, 13):
             mm = f"{m:02d}"
             n = per.get((y, mm), 0)
-            cells.append(f'<td><a href="#m{y}-{mm}">{n}</a></td>' if n
-                         else '<td class="zero">·</td>')
-        total = sum(n for (yy, _), n in per.items() if yy == y)
-        rows.append(f'<tr><th><a href="#y{y}">{y}</a></th>{"".join(cells)}'
+            if n:
+                cells.append(f'<td><a href="#m{y}-{mm}">{n}</a></td>')
+            elif first <= f"{y}-{mm}" <= last:
+                cells.append('<td class="zero">0</td>')
+            else:
+                cells.append("<td></td>")
+        total = sum(n for (yy, _), n in per.items() if yy == y) or 0
+        anchor = f'<a href="#y{y}">{y}</a>' if total else y
+        rows.append(f'<tr><th>{anchor}</th>{"".join(cells)}'
                     f'<td class="sum">{total}</td></tr>')
     archive = (
         '<section id="archive"><h2>年月ごとの冊数</h2><table>'
@@ -215,12 +227,14 @@ def main():
         + "".join(rows) + "</tbody></table></section>")
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
-    buttons = "".join(
-        f'<button data-star="{n}" aria-pressed="false">{stars(n)[:n]} {c[n]}</button>'
-        for n in (5, 4, 3, 2))
+    nbest = sum(1 for b in books if b["kind"] == "best")
+    buttons = (f'<button data-sel="best" aria-pressed="false">ベスト {nbest}</button>'
+               + "".join(f'<button data-sel="{n}" aria-pressed="false">{stars(n)[:n]} {c[n]}</button>'
+                         for n in (5, 4, 3, 2)))
 
     built = datetime.date.today().isoformat()
-    withauthor = sum(1 for b in books if b.get("author"))
+    nread = len(read)
+    withauthor = sum(1 for b in read if b.get("author"))
 
     html_doc = f"""<!doctype html>
 <html lang="ja">
@@ -246,9 +260,10 @@ def main():
 {"".join(parts)}
 <div id="nores">見つかりませんでした</div>
 <footer>
-FC2ブログ「読書記録 by どぅ」のアーカイブ。{built} 時点で {len(books)} 件。<br>
-著者・出版社は <a href="https://openbd.jp/">openBD</a> と
-<a href="https://ndlsearch.ndl.go.jp/">国立国会図書館サーチ</a> から補完（{withauthor} 件）。
+FC2ブログ「読書記録 by どぅ」のアーカイブ。{built} 時点で {len(books)} 件（うち本の記事 {nread} 件）。<br>
+著者・出版社・出版年は、元記事の表記と
+<a href="https://openbd.jp/">openBD</a>・<a href="https://ndlsearch.ndl.go.jp/">国立国会図書館サーチ</a>
+から補った（著者が入っているのは {withauthor} 件）。
 </footer>
 </main>
 <script>{JS}</script>

@@ -51639,3 +51639,29 @@ KEYWORDS:
 
 
 --------
+AUTHOR: どぅ
+TITLE: 父の生きる
+STATUS: Publish
+ALLOW COMMENTS: 1
+CONVERT BREAKS: default
+ALLOW PINGS: 1
+PRIMARY CATEGORY: ★★★★★（５）
+CATEGORY: ★★★★★（５）
+
+DATE: 08/23/2026 13:40:00
+-----
+BODY:
+P121.父の本質は、私を可愛がってくれて、自分よりも大切に思ってくれて、私が頼りにもしてきたおとうさんだ。だから、父の欠点をあげつらうような愚痴は口に出さないことにした。
+-----
+EXTENDED BODY:
+
+-----
+EXCERPT:
+
+-----
+KEYWORDS:
+
+-----
+
+
+--------
