@@ -58,7 +58,8 @@ main{padding:2.2rem 0 7rem}
  font-size:.74rem;white-space:nowrap;min-width:100%;font-variant-numeric:tabular-nums}
 #archive th,#archive td{padding:.16rem .34rem;text-align:right;font-weight:400}
 #archive thead th{color:#a8a29a;border-bottom:1px solid var(--hair);font-size:.68rem}
-#archive tbody th{text-align:left;color:var(--fg);padding-right:.8rem;letter-spacing:.04em}
+#archive tbody th,#archive tfoot th{text-align:left;color:var(--fg);padding-right:.8rem;
+ letter-spacing:.04em}
 #archive tbody tr:hover td{background:#f6f3ec}
 #archive a,#archive .cell{color:var(--fg);text-decoration:none;display:block;
  padding:.06rem .2rem;border-radius:.2rem}
@@ -268,8 +269,9 @@ def main():
     archive = (
         '<section id="archive"><h2>年月ごとの冊数</h2><table>'
         '<thead><tr><th></th>'
-        + "".join(f"<th>{m}</th>" for m in range(1, 13))
-        + '<th class="sum">計</th></tr></thead><tbody>'
+        # 見出しも数字と同じ入れ物に入れる（入れないと余白のぶんだけ右にずれる）
+        + "".join(f'<th><span class="cell">{m}</span></th>' for m in range(1, 13))
+        + '<th class="sum"><span class="cell">計</span></th></tr></thead><tbody>'
         + "".join(rows) + "</tbody>" + foot + "</table></section>")
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
