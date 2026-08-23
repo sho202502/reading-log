@@ -63,6 +63,35 @@ def clean_body(raw):
     return t.strip()
 
 
+BOOK_PREFIX = re.compile(r"^[ 　]*[【『\[（(][ 　]*本[ 　]*[】』\]）)][ 　]*")
+BODY_TITLE = re.compile(r"^[ 　]*題名[：:][ 　]*(.+?)[ 　]*$", re.M)
+BODY_AUTHOR = [
+    re.compile(r"^[ 　]*(?:著者|作者)[：:][ 　]*(.+?)[ 　]*$", re.M),
+    re.compile(r"^[ 　]*(.{2,30}?)[ 　]*[（(][ 　]*著[ 　]*[）)]", re.M),
+]
+
+
+def split_headline(title):
+    """『本』 一言感想 / 書名 の形式なら、書名と一言感想に分ける。"""
+    t = BOOK_PREFIX.sub("", title).strip()
+    if " / " in t:
+        note, _, name = t.rpartition(" / ")
+        if len(name) >= 2:
+            return name.strip(), note.strip() or None
+    return t, None
+
+
+def body_author(body):
+    for p in BODY_AUTHOR:
+        m = p.search(body)
+        if m:
+            a = re.sub(r"\s*[（(].*?[）)]\s*$", "", m.group(1)).strip()
+            a = re.sub(r"[ 　]+", " ", a)
+            if 1 < len(a) <= 40 and not re.search(r"[。、！？]", a):
+                return a
+    return None
+
+
 def title_hints(title):
     """初期の記事は「書名（著者）出版社」形式。分解できれば著者と出版社を返す。"""
     m = re.match(r"^(.*?)[（(]([^（）()]{1,30})[）)]\s*(.{0,25})$", title)
@@ -97,7 +126,15 @@ def main():
         for p in ASIN_PATTERNS:
             asin.update(re.findall(p, body_raw))
 
-        clean_title, author, publisher = title_hints(title)
+        body_text = clean_body(body_raw)
+
+        # 書名は「本文の題名：」→「『本』一言 / 書名」→「書名（著者）出版社」の順に信用する
+        headline, note = split_headline(title)
+        m_bt = BODY_TITLE.search(body_text)
+        clean_title, author, publisher = title_hints(headline)
+        if m_bt:
+            clean_title = m_bt.group(1)
+        author = author or body_author(body_text)
 
         bid = f"{yyyy}{mm}{dd}"
         n = 1
@@ -122,8 +159,9 @@ def main():
             "author": author,
             "publisher": publisher,
             "pubdate": None,
-            "source": "title" if author else None,
-            "body": clean_body(body_raw),
+            "note": note,
+            "source": "元記事" if author else None,
+            "body": body_text,
         })
 
     books.sort(key=lambda b: b["datetime"])
@@ -135,7 +173,8 @@ def main():
     print(f"{len(books)}件 -> {OUT.relative_to(ROOT)}")
     print("  ISBN手掛かり:", dict(c))
     print("  星の分布:", dict(collections.Counter(b["rating"] for b in books)))
-    print("  著者がタイトルから取れた:", sum(1 for b in books if b["author"]))
+    print("  著者が元記事から取れた:", sum(1 for b in books if b["author"]))
+    print("  一言感想あり:", sum(1 for b in books if b["note"]))
     print("  本文が空:", sum(1 for b in books if not b["body"]))
 
 
