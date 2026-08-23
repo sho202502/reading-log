@@ -109,6 +109,9 @@ document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
   apply();
 });
 q.oninput=apply;
+// 手元でファイルとして開いているときは "./" がフォルダ一覧になってしまうので、
+// リンクをたどらせず、その場で読み込み直す（絞り込みも初期状態に戻る）。
+document.getElementById('home').onclick=e=>{e.preventDefault();location.reload();};
 """
 
 
@@ -248,7 +251,7 @@ def main():
 </head>
 <body>
 <header><div class="wrap">
-<h1><a href="./">読書記録 by どぅ</a><small>{len(books)}件 ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
+<h1><a href="./" id="home">読書記録 by どぅ</a><small>{len(books)}件 ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
 <div class="controls">
 {buttons}
 <input type="search" id="q" placeholder="書名・著者・本文で絞り込む" autocomplete="off">
