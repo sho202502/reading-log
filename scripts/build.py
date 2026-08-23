@@ -68,8 +68,9 @@ main{padding:2.2rem 0 7rem}
 
 .year{font-size:1.85rem;letter-spacing:.14em;color:var(--fg);margin:4.2rem 0 0;
  font-weight:400;line-height:1;scroll-margin-top:7rem}
-.month{font-size:.68rem;letter-spacing:.34em;color:var(--sub);margin:2.3rem 0 .9rem;
- padding-bottom:.45rem;border-bottom:1px solid var(--hair);scroll-margin-top:7rem}
+.month{font-size:.98rem;letter-spacing:.14em;color:var(--fg);font-weight:500;
+ margin:2.4rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--hair);
+ scroll-margin-top:7rem}
 .year+.month{margin-top:1.1rem}
 
 article{padding:1.7rem 0;border-bottom:1px solid var(--hair)}
@@ -311,7 +312,7 @@ def main():
     (DOCS / "favicon.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
         '<circle cx="32" cy="32" r="30" fill="#8a6d3b"/>'
-        '<text x="32" y="34" text-anchor="middle" dominant-baseline="central"'
+        '<text x="32" y="32" text-anchor="middle" dominant-baseline="central"'
         ' font-family="Hiragino Sans,Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif"'
         ' font-weight="700" font-size="38" fill="#fbfaf7">本</text></svg>\n', encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
