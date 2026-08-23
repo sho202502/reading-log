@@ -83,7 +83,7 @@ main{padding:2.6rem 0 7rem}
 .month::after{content:"";flex:1;height:1px;background:var(--hair)}
 .year+.month{margin-top:1.6rem}
 
-article{padding:1.9rem 0;border-bottom:1px solid var(--hair)}
+article{padding:1.9rem 0;border-bottom:1px solid var(--hair);scroll-margin-top:6.5rem}
 .meta{font-size:.66rem;color:var(--sub);display:flex;gap:1rem;flex-wrap:wrap;
  align-items:baseline;font-variant-numeric:tabular-nums;letter-spacing:.16em}
 .stars{color:var(--fg);letter-spacing:.22em;font-family:inherit;font-size:.82rem}
@@ -146,6 +146,26 @@ document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
   apply();
 });
 q.oninput=apply;
+// 記事へのリンク(年間ベストの中の書名)は、絞り込み中でも飛べるようにする。
+// 絞り込みで隠れている記事は、先に絞り込みを解いてから移動する。
+function jumpTo(id){
+  const el=document.getElementById(id);
+  if(!el) return false;
+  if(el.classList.contains('hide')){
+    sel=''; q.value='';
+    document.querySelectorAll('[data-sel]').forEach(x=>x.setAttribute('aria-pressed','false'));
+    apply();
+  }
+  el.scrollIntoView();
+  history.replaceState(null,'','#'+id);
+  return true;
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]');
+  if(!a || a.id==='home') return;
+  if(jumpTo(decodeURIComponent(a.getAttribute('href').slice(1)))) e.preventDefault();
+});
+if(location.hash) jumpTo(decodeURIComponent(location.hash.slice(1)));
 // サイトタイトルを押したら本当の先頭に戻す。
 // 月へのリンクで飛んだあとは URL に #m2018-03 のような指定が残っていて、そのまま
 // 読み込み直すとまたそこへ飛んでしまうので、# を外した行き先を自分で指定する。
