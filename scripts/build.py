@@ -13,59 +13,85 @@ DOCS = ROOT / "docs"
 CSS = """
 /* 読むための画面なので配色は明るい方に固定する（端末の暗い設定に引きずられない） */
 :root{color-scheme:light;
- --bg:#fdfcfa;--fg:#1c1b19;--sub:#6b6862;--line:#e6e2db;--accent:#8a6d3b;--card:#fff}
+ --bg:#fbfaf7;--fg:#1a1917;--body:#2b2926;--sub:#79756d;--line:#e8e4dc;
+ --hair:#f0ece4;--accent:#8a6d3b;--card:#fff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);
  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
- line-height:1.9;font-size:16px;-webkit-text-size-adjust:100%}
-header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
- padding:.7rem 1rem}
-.wrap{max-width:54rem;margin:0 auto;padding:0 1.2rem}
-h1{font-size:1.05rem;margin:0 0 .5rem;font-weight:600;letter-spacing:.04em}
+ line-height:1.9;font-size:16px;-webkit-text-size-adjust:100%;
+ font-feature-settings:"palt"}
+.wrap{max-width:54rem;margin:0 auto;padding:0 1.4rem}
+
+header{position:sticky;top:0;z-index:10;background:rgba(251,250,247,.94);
+ backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line);
+ padding:.85rem 0 .8rem}
+h1{font-size:1.22rem;margin:0 0 .62rem;font-weight:500;letter-spacing:.16em;
+ line-height:1.4;display:flex;align-items:baseline;gap:.9rem;flex-wrap:wrap}
 h1 a{color:inherit;text-decoration:none}
-h1 small{font-weight:400;color:var(--sub);font-size:.8rem;margin-left:.6rem;letter-spacing:0}
+h1 small{font-weight:400;color:var(--sub);font-size:.74rem;letter-spacing:.06em;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#count{font-variant-numeric:tabular-nums}
+
 .controls{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
-button{font:inherit;font-size:.82rem;padding:.22rem .7rem;border:1px solid var(--line);
- border-radius:999px;background:var(--card);color:var(--sub);cursor:pointer}
+button{font:inherit;font-size:.8rem;line-height:1.6;padding:.2rem .8rem;
+ border:1px solid var(--line);border-radius:999px;background:var(--card);
+ color:var(--sub);cursor:pointer;display:inline-flex;align-items:baseline;
+ justify-content:space-between;gap:.5rem;min-width:7.6rem;
+ transition:background .12s,border-color .12s,color .12s}
+button:hover{border-color:#d6d0c4}
+button .n{font-size:.72rem;opacity:.7;font-variant-numeric:tabular-nums}
 button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-input[type=search]{font:inherit;font-size:.85rem;padding:.25rem .7rem;border:1px solid var(--line);
- border-radius:999px;background:var(--card);color:var(--fg);min-width:11rem;flex:1}
-#count{font-size:.78rem;color:var(--sub);margin-left:auto;white-space:nowrap}
-main{padding:1.5rem 0 6rem}
+button[aria-pressed=true] .n{opacity:.65}
+input[type=search]{font:inherit;font-size:.84rem;padding:.24rem .9rem;
+ border:1px solid var(--line);border-radius:999px;background:var(--card);
+ color:var(--fg);flex:1;min-width:8rem}
+input[type=search]:focus{outline:none;border-color:var(--accent)}
+
+main{padding:2.2rem 0 7rem}
 
 /* 年月ごとの冊数 */
-#archive{border:1px solid var(--line);border-radius:.4rem;background:var(--card);
- padding:.8rem .9rem;margin-bottom:2.5rem;overflow-x:auto}
-#archive h2{font-size:.78rem;letter-spacing:.22em;color:var(--sub);margin:0 0 .6rem;font-weight:400}
+#archive{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+ padding:1rem .1rem 1.1rem;margin-bottom:3.4rem;overflow-x:auto}
+#archive h2{font-size:.7rem;letter-spacing:.3em;color:var(--sub);margin:0 0 .8rem;
+ font-weight:400}
 #archive table{border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
- font-size:.76rem;white-space:nowrap;min-width:100%}
-#archive th,#archive td{padding:.15rem .35rem;text-align:right;font-weight:400}
-#archive thead th{color:var(--sub);border-bottom:1px solid var(--line)}
-#archive tbody th{text-align:left;color:var(--fg);padding-right:.7rem}
-#archive a{color:var(--fg);text-decoration:none;display:block;padding:.05rem .15rem;border-radius:.2rem}
-#archive a:hover{background:var(--line)}
-#archive .zero{color:#c9c3b8}
-#archive .sum{color:var(--accent);border-left:1px solid var(--line);padding-left:.6rem}
+ font-size:.74rem;white-space:nowrap;min-width:100%;font-variant-numeric:tabular-nums}
+#archive th,#archive td{padding:.16rem .34rem;text-align:right;font-weight:400}
+#archive thead th{color:#a8a29a;border-bottom:1px solid var(--hair);font-size:.68rem}
+#archive tbody th{text-align:left;color:var(--fg);padding-right:.8rem;letter-spacing:.04em}
+#archive tbody tr:hover td{background:#f6f3ec}
+#archive a{color:var(--fg);text-decoration:none;display:block;padding:.06rem .2rem;
+ border-radius:.2rem}
+#archive a:hover{background:var(--accent);color:#fff}
+#archive .zero{color:#d8d2c6}
+#archive .sum{color:var(--accent);border-left:1px solid var(--hair);padding-left:.7rem}
 
-.year{font-size:.95rem;letter-spacing:.2em;color:var(--fg);margin:3rem 0 .2rem;font-weight:600}
-.month{font-size:.75rem;letter-spacing:.2em;color:var(--sub);margin:1.6rem 0 .6rem;
- border-bottom:1px solid var(--line);padding-bottom:.3rem;scroll-margin-top:6.5rem}
-.year+.month{margin-top:.6rem}
-article{padding:1.3rem 0;border-bottom:1px solid var(--line)}
-.meta{font-size:.75rem;color:var(--sub);display:flex;gap:.7rem;flex-wrap:wrap;
- font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}
-.stars{color:var(--accent);letter-spacing:.1em;font-family:inherit}
-h2{font-size:1.06rem;margin:.3rem 0 .15rem;font-weight:600;line-height:1.6}
-.note{font-size:.88rem;color:var(--accent);margin:.1rem 0 .35rem}
-.byline{font-size:.8rem;color:var(--sub);margin-bottom:.6rem}
-.body{white-space:pre-wrap;overflow-wrap:anywhere}
-.body a{color:var(--accent)}
-.empty{color:var(--sub);font-size:.85rem;font-style:italic}
-article.best{background:var(--card);border:1px solid var(--line);border-radius:.4rem;
- padding:1.3rem 1.2rem;margin:1.3rem 0}
+.year{font-size:1.85rem;letter-spacing:.14em;color:var(--fg);margin:4.2rem 0 0;
+ font-weight:400;line-height:1;scroll-margin-top:7rem}
+.month{font-size:.68rem;letter-spacing:.34em;color:var(--sub);margin:2.3rem 0 .9rem;
+ padding-bottom:.45rem;border-bottom:1px solid var(--hair);scroll-margin-top:7rem}
+.year+.month{margin-top:1.1rem}
+
+article{padding:1.7rem 0;border-bottom:1px solid var(--hair)}
+.meta{font-size:.72rem;color:var(--sub);display:flex;gap:.85rem;flex-wrap:wrap;
+ align-items:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+ letter-spacing:.04em}
+.stars{color:var(--accent);letter-spacing:.14em;font-family:inherit;font-size:1rem}
+h2{font-size:1.14rem;margin:.34rem 0 .18rem;font-weight:600;line-height:1.65;
+ letter-spacing:.01em}
+.note{font-size:.86rem;color:var(--accent);margin:.15rem 0 .4rem;letter-spacing:.02em}
+.byline{font-size:.78rem;color:var(--sub);margin-bottom:.8rem;letter-spacing:.03em}
+.body{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--body);line-height:2.02}
+.body a{color:var(--accent);text-underline-offset:.2em}
+.empty{color:#a8a29a;font-size:.84rem;font-style:italic}
+article.best{background:var(--card);border:1px solid var(--line);border-radius:.5rem;
+ padding:1.6rem 1.5rem;margin:1.6rem 0}
+article.best h2{letter-spacing:.1em}
 .hide{display:none}
-#nores{display:none;color:var(--sub);padding:3rem 0;text-align:center}
-footer{color:var(--sub);font-size:.75rem;padding:2rem 0 4rem;border-top:1px solid var(--line)}
+#nores{display:none;color:var(--sub);padding:4rem 0;text-align:center;letter-spacing:.1em}
+footer{color:#a8a29a;font-size:.72rem;padding:2.6rem 0 5rem;margin-top:3rem;
+ border-top:1px solid var(--line);line-height:2}
+footer a{color:var(--sub)}
 """
 
 JS = """
@@ -236,8 +262,9 @@ def main():
 
     c = collections.Counter(b["rating"] for b in books if b["rating"])
     nbest = sum(1 for b in books if b["kind"] == "best")
-    buttons = (f'<button data-sel="best" aria-pressed="false">ベスト {nbest}</button>'
-               + "".join(f'<button data-sel="{n}" aria-pressed="false">{stars(n)[:n]} {c[n]}</button>'
+    buttons = (f'<button data-sel="best" aria-pressed="false">ベスト<span class="n">{nbest}</span></button>'
+               + "".join(f'<button data-sel="{n}" aria-pressed="false">'
+                         f'{stars(n)[:n]}<span class="n">{c[n]}</span></button>'
                          for n in (5, 4, 3, 2)))
 
     built = datetime.date.today().isoformat()
@@ -251,16 +278,16 @@ def main():
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
 <meta name="googlebot" content="noindex,nofollow">
-<title>読書記録 by どぅ</title>
+<title>読書記録</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>{CSS}</style>
 </head>
 <body>
 <header><div class="wrap">
-<h1><a href="./" id="home">読書記録 by どぅ</a><small>{len(books)}件 ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
+<h1><a href="./" id="home">読書記録</a><small><span id="count">{len(books)}件</span> ／ {books[-1]["date"][:4]}–{books[0]["date"][:4]}</small></h1>
 <div class="controls">
 {buttons}
-<input type="search" id="q" placeholder="書名・著者・本文で絞り込む" autocomplete="off">
-<span id="count">{len(books)}件</span>
+<input type="search" id="q" placeholder="検索" autocomplete="off">
 </div>
 </div></header>
 <main class="wrap">
@@ -268,7 +295,7 @@ def main():
 {"".join(parts)}
 <div id="nores">見つかりませんでした</div>
 <footer>
-FC2ブログ「読書記録 by どぅ」のアーカイブ。{built} 時点で {len(books)} 件（うち本の記事 {nread} 件）。<br>
+もとはFC2ブログ「読書記録 by どぅ」。{built} 時点で {len(books)} 件（うち本の記事 {nread} 冊）。<br>
 著者・出版社・出版年は、元記事の表記と
 <a href="https://openbd.jp/">openBD</a>・<a href="https://ndlsearch.ndl.go.jp/">国立国会図書館サーチ</a>
 から補った（著者が入っているのは {withauthor} 件）。
@@ -280,6 +307,13 @@ FC2ブログ「読書記録 by どぅ」のアーカイブ。{built} 時点で {
 
     DOCS.mkdir(exist_ok=True)
     (DOCS / "index.html").write_text(html_doc, encoding="utf-8")
+    # ファビコン: 「本」を丸で囲んだもの
+    (DOCS / "favicon.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+        '<circle cx="32" cy="32" r="30" fill="#8a6d3b"/>'
+        '<text x="32" y="34" text-anchor="middle" dominant-baseline="central"'
+        ' font-family="Hiragino Sans,Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif"'
+        ' font-weight="700" font-size="38" fill="#fbfaf7">本</text></svg>\n', encoding="utf-8")
     (DOCS / ".nojekyll").write_text("", encoding="utf-8")
     size = (DOCS / "index.html").stat().st_size
     print(f"docs/index.html {size/1024/1024:.2f} MB / {len(books)}件 / 著者あり {withauthor}件")
