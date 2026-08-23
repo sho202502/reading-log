@@ -4,7 +4,7 @@
 Ctrl+F を確実に効かせたいので、本文は折りたたまず全部DOMに置く(全体で約1.2MB)。
 星での絞り込みと語での絞り込みはJSで行うが、初期状態は全件表示。
 """
-import json, html, pathlib, collections, datetime
+import json, html, re, unicodedata, pathlib, collections, datetime
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BOOKS = ROOT / "data" / "books.json"
@@ -40,6 +40,7 @@ article{padding:1.3rem 0;border-bottom:1px solid var(--line)}
 .stars{color:var(--accent);letter-spacing:.1em;font-family:inherit}
 h2{font-size:1.06rem;margin:.3rem 0 .15rem;font-weight:600;line-height:1.6}
 .byline{font-size:.8rem;color:var(--sub);margin-bottom:.6rem}
+.note{font-size:.88rem;color:var(--accent);margin:.1rem 0 .35rem}
 .body{white-space:pre-wrap;overflow-wrap:anywhere}
 .body a{color:var(--accent)}
 .empty{color:var(--sub);font-size:.85rem;font-style:italic}
@@ -91,12 +92,31 @@ def stars(n):
     return "★" * n + "☆" * (5 - n) if n else ""
 
 
-def linkify_best(body, by_title):
-    """年間ベストの本文のうち、書名と一致する行をその記事へのリンクにする。"""
+BLOG_SUFFIX = re.compile(r"\s*[-–—]\s*読書記録\s*by\s*どぅ\s*$")
+PUNCT = re.compile(r"[\s!-/:-@\[-`{-~！-／：-＠［-｀｛-～、。「」『』・ー－―~〜]")
+
+
+def norm(s):
+    """表記ゆれ(全角半角・空白・記号)を吸収した照合用のキー。"""
+    return PUNCT.sub("", unicodedata.normalize("NFKC", s)).lower()
+
+
+def linkify_best(body, by_title, by_norm):
+    """年間ベストの本文のうち、書名と一致する行をその記事へのリンクにする。
+
+    元記事の書名とベスト側の書き方が微妙にずれている(空白・記号・副題の有無)ので、
+    完全一致で駄目なら正規化して照合し、それでも駄目なら前方一致まで見る。
+    """
     out = []
     for line in body.split("\n"):
-        key = line.strip()
+        key = BLOG_SUFFIX.sub("", line.strip())
         hit = by_title.get(key)
+        if not hit and len(key) >= 3:
+            k = norm(key)
+            hit = by_norm.get(k)
+            if not hit and len(k) >= 5:
+                hit = next((v for kk, v in by_norm.items()
+                            if len(kk) >= 5 and (kk.startswith(k) or k.startswith(kk))), None)
         if hit:
             out.append(f'<a href="#{hit}">{html.escape(key)}</a>')
         else:
@@ -109,10 +129,11 @@ def main():
     books.sort(key=lambda b: b["datetime"], reverse=True)
 
     # 年間ベストからのリンク先: 同じ書名の記事のうち一番新しいもの
-    by_title = {}
+    by_title, by_norm = {}, {}
     for b in sorted(books, key=lambda b: b["datetime"]):
         if b["kind"] == "book":
             by_title[b["title"]] = b["id"]
+            by_norm[norm(b["title"])] = b["id"]
 
     parts, cur_year = [], None
     for b in books:
@@ -130,7 +151,7 @@ def main():
         byline = " / ".join(x for x in [b.get("author"), b.get("publisher"), b.get("pubdate")] if x)
 
         if b["kind"] == "best":
-            body_html = linkify_best(b["body"], by_title)
+            body_html = linkify_best(b["body"], by_title, by_norm)
         elif b["body"]:
             body_html = html.escape(b["body"])
         else:
@@ -141,6 +162,7 @@ def main():
             f'>'
             f'<div class="meta">{" ".join(meta)}</div>'
             f'<h2>{html.escape(b["title"])}</h2>'
+            + (f'<div class="note">{html.escape(b["note"])}</div>' if b.get("note") else "")
             + (f'<div class="byline">{html.escape(byline)}</div>' if byline else "")
             + f'<div class="body">{body_html}</div></article>'
         )
