@@ -109,9 +109,14 @@ document.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{
   apply();
 });
 q.oninput=apply;
-// 手元でファイルとして開いているときは "./" がフォルダ一覧になってしまうので、
-// リンクをたどらせず、その場で読み込み直す（絞り込みも初期状態に戻る）。
-document.getElementById('home').onclick=e=>{e.preventDefault();location.reload();};
+// サイトタイトルを押したら本当の先頭に戻す。
+// 月へのリンクで飛んだあとは URL に #m2018-03 のような指定が残っていて、そのまま
+// 読み込み直すとまたそこへ飛んでしまうので、# を外した行き先を自分で指定する。
+// （href="./" のままだと、手元でファイルとして開いたときにフォルダ一覧になってしまう）
+document.getElementById('home').onclick=e=>{
+  e.preventDefault();
+  location.replace(location.pathname + location.search);
+};
 """
 
 
