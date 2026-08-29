@@ -24,6 +24,11 @@ NDL_ISBN = CACHE / "ndl_isbn.json"
 UA = {"User-Agent": "reading-log/1.0 (personal archive script)"}
 
 
+def done(b):
+    """著者・出版社・出版年が揃っている記事は、もう触らない。"""
+    return bool(b["author"] and b["publisher"] and b["pubdate"])
+
+
 def load(p, default):
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else default
 
@@ -253,10 +258,6 @@ def main():
     offline = "--offline" in sys.argv
     books = load(BOOKS, [])
     short = load(SHORT, {})
-
-    def done(b):
-        """著者・出版社・出版年が揃っている記事は、もう触らない。"""
-        return bool(b["author"] and b["publisher"] and b["pubdate"])
 
     # 1. 短縮URLからISBN/ASINを確定
     for b in books:
