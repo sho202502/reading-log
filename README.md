@@ -33,7 +33,8 @@ BODY
 python3 scripts/enrich.py && python3 scripts/build.py
 ```
 
-pushすると GitHub Actions が `docs/` を GitHub Pages に出す。
+`main` にpushすると GitHub Actions が `docs/` を GitHub Pages に出す。
+`main` 以外に押してもサイトは作り直されない。
 Actionsは `build.py` を走らせるだけで、外部には問い合わせない。
 
 日付を変えたいときは `--date 2026-08-20`、ISBNが分かっていれば `--isbn` を付ける。
